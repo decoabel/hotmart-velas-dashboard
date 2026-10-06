@@ -3,130 +3,137 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#2a170f">
-  <meta name="description" content="Dashboard interactivo de oportunidades para afiliados Hotmart en el nicho de velas artesanales.">
+  <meta name="theme-color" content="#21140e">
+  <meta name="description" content="Dashboard interactivo de oportunidades Hotmart para afiliados del nicho de velas artesanales.">
   <title>Hotmart · Universo Velas Artesanales</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preload" href="assets/portada-velas.webp" as="image">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main id="app">
-    <section id="cover" class="cover-screen" aria-label="Portada principal">
-      <div class="cover-stage">
-        <img src="assets/portada-velas.webp" class="cover-image" alt="Taller cálido de velas artesanales con botones de música y Hotmart">
-        <button id="coverMusic" class="hotspot music-hotspot" type="button" aria-label="Encender o apagar música ambiental" aria-pressed="false">
-          <span class="sr-only">Music ON / OFF</span>
-        </button>
-        <button id="enterUniverse" class="hotspot hotmart-hotspot" type="button" aria-label="Entrar al universo de nichos de velas artesanales">
-          <span class="sr-only">Entrar al dashboard Hotmart</span>
-        </button>
-        <div id="coverStatus" class="cover-status" aria-live="polite">Música OFF · Pulsa HOTMART para entrar</div>
+<main id="app">
+  <section id="cover" class="cover-screen" aria-label="Portada principal">
+    <div class="cover-stage">
+      <img src="assets/portada-velas.webp" class="cover-image" alt="Estudio cálido de velas artesanales con acceso a música y Hotmart">
+      <button id="coverMusicBtn" class="hotspot music-hotspot" type="button" aria-label="Encender o apagar la música ambiental" aria-pressed="false">
+        <span class="sr-only">Music ON / OFF</span>
+      </button>
+      <button id="enterBtn" class="hotspot hotmart-hotspot" type="button" aria-label="Entrar al universo de nichos de velas artesanales">
+        <span class="sr-only">Entrar al dashboard Hotmart</span>
+      </button>
+      <div id="coverLed" class="music-led" aria-hidden="true"></div>
+      <div id="coverStatus" class="cover-status" aria-live="polite">Música OFF · Pulsa MUSIC para activar o HOTMART para entrar</div>
+    </div>
+  </section>
+
+  <section id="dashboard" class="dashboard" hidden>
+    <header class="dashboard-header">
+      <div class="header-copy">
+        <button id="homeBtn" class="ghost-btn" type="button">← Menú principal</button>
+        <div>
+          <span class="eyebrow">HOTMART · AFILIADOS · VELAS ARTESANALES</span>
+          <h1>Universo de oportunidades</h1>
+          <p>Explora subnichos, compara Demanda vs. Oferta y encuentra las brechas con mayor espacio comercial.</p>
+        </div>
+      </div>
+      <button id="musicBtn" class="music-btn" type="button" aria-pressed="false">
+        <span id="musicLed" class="music-led small" aria-hidden="true"></span>
+        <span id="musicLabel">Música OFF</span>
+      </button>
+    </header>
+
+    <section class="kpi-grid" aria-label="Indicadores principales">
+      <article class="kpi"><span>Mayor brecha</span><strong id="kpiBestGap">—</strong><small id="kpiBestNiche">—</small></article>
+      <article class="kpi"><span>Demanda promedio</span><strong id="kpiDemand">—</strong><small>Índice estimado</small></article>
+      <article class="kpi"><span>Oferta promedio</span><strong id="kpiSupply">—</strong><small>Presión competitiva</small></article>
+      <article class="kpi"><span>Oportunidades altas</span><strong id="kpiHigh">—</strong><small>Brecha ≥ 30</small></article>
+    </section>
+
+    <section class="filter-panel" aria-label="Filtros del dashboard">
+      <div class="field search-field">
+        <label for="searchInput">Buscar subnicho</label>
+        <input id="searchInput" type="search" placeholder="Ej. bodas, aromaterapia, precios…" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="categoryFilter">Categoría</label>
+        <select id="categoryFilter"><option value="all">Todas</option></select>
+      </div>
+      <div class="field">
+        <label for="minDemand">Demanda mínima <b id="minDemandValue">0</b></label>
+        <input id="minDemand" type="range" min="0" max="100" value="0" step="1">
+      </div>
+      <div class="field">
+        <label for="maxSupply">Oferta máxima <b id="maxSupplyValue">100</b></label>
+        <input id="maxSupply" type="range" min="0" max="100" value="100" step="1">
+      </div>
+      <div class="field">
+        <label for="minGap">Brecha mínima <b id="minGapValue">0</b></label>
+        <input id="minGap" type="range" min="0" max="50" value="0" step="1">
+      </div>
+      <div class="field">
+        <label for="sortBy">Ordenar</label>
+        <select id="sortBy">
+          <option value="gap">Mayor oportunidad</option>
+          <option value="demand">Mayor demanda</option>
+          <option value="supply">Menor oferta</option>
+          <option value="name">A–Z</option>
+        </select>
+      </div>
+      <button id="resetFilters" class="reset-btn" type="button">Restablecer</button>
+    </section>
+
+    <section class="summary-band">
+      <div>
+        <span class="eyebrow">LECTURA ACTUAL</span>
+        <strong id="summaryText">—</strong>
+      </div>
+      <div class="legend">
+        <span><i class="dot demand"></i>Demanda</span>
+        <span><i class="dot supply"></i>Oferta</span>
+        <span><i class="dot gap"></i>Brecha</span>
       </div>
     </section>
 
-    <section id="dashboard" class="dashboard" hidden>
-      <header class="dashboard-header">
-        <div class="brand-block">
-          <button id="homeBtn" class="ghost-btn" type="button">← Menú principal</button>
+    <section class="content-layout">
+      <div class="main-list">
+        <div class="section-heading">
           <div>
-            <span class="eyebrow">HOTMART · AFILIADOS · VELAS ARTESANALES</span>
-            <h1>Universo de oportunidades</h1>
-            <p>Explora subnichos, compara demanda vs. oferta y filtra dónde existe mayor brecha comercial.</p>
+            <h2>Subnichos</h2>
+            <p>Selecciona una tarjeta para ver su lectura comercial.</p>
           </div>
+          <span id="resultsCount" class="count-pill">0 resultados</span>
         </div>
-        <button id="musicBtn" class="music-btn" type="button" aria-pressed="false">♪ Música OFF</button>
-      </header>
+        <div id="nicheGrid" class="niche-grid"></div>
+      </div>
 
-      <section class="kpi-grid" aria-label="Indicadores principales">
-        <article class="kpi"><span>Mayor brecha</span><strong id="kpiBestGap">—</strong><small id="kpiBestNiche">—</small></article>
-        <article class="kpi"><span>Demanda promedio</span><strong id="kpiDemand">—</strong><small>Índice estimado</small></article>
-        <article class="kpi"><span>Oferta promedio</span><strong id="kpiSupply">—</strong><small>Presión competitiva</small></article>
-        <article class="kpi"><span>Oportunidades altas</span><strong id="kpiHigh">—</strong><small>Brecha ≥ 30</small></article>
-      </section>
-
-      <section class="filter-panel" aria-label="Filtros del dashboard">
-        <div class="field search-field">
-          <label for="searchInput">Buscar subnicho</label>
-          <input id="searchInput" type="search" placeholder="Ej. bodas, aromaterapia, precios…" autocomplete="off">
+      <aside class="detail-panel" aria-live="polite">
+        <span class="eyebrow">OPORTUNIDAD SELECCIONADA</span>
+        <h2 id="detailName">Selecciona un subnicho</h2>
+        <div class="score-line"><span id="detailLevel" class="level-badge">—</span><strong id="detailGap">—</strong></div>
+        <div class="detail-bars">
+          <div class="detail-row"><span>Demanda</span><b id="detailDemand">—</b></div>
+          <div class="meter"><i id="detailDemandBar" class="demand-bar"></i></div>
+          <div class="detail-row"><span>Oferta</span><b id="detailSupply">—</b></div>
+          <div class="meter"><i id="detailSupplyBar" class="supply-bar"></i></div>
+          <div class="detail-row"><span>Brecha</span><b id="detailGapSmall">—</b></div>
+          <div class="meter"><i id="detailGapBar" class="gap-bar"></i></div>
         </div>
-        <div class="field">
-          <label for="categoryFilter">Categoría</label>
-          <select id="categoryFilter"><option value="all">Todas</option></select>
+        <div class="detail-copy">
+          <h3>Ángulo comercial</h3><p id="detailAngle">—</p>
+          <h3>Contenido para captar tráfico</h3><p id="detailContent">—</p>
+          <h3>Perfil de compra</h3><p id="detailBuyer">—</p>
         </div>
-        <div class="field">
-          <label for="minDemand">Demanda mínima <b id="minDemandValue">0</b></label>
-          <input id="minDemand" type="range" min="0" max="100" value="0" step="1">
-        </div>
-        <div class="field">
-          <label for="maxSupply">Oferta máxima <b id="maxSupplyValue">100</b></label>
-          <input id="maxSupply" type="range" min="0" max="100" value="100" step="1">
-        </div>
-        <div class="field">
-          <label for="minGap">Brecha mínima <b id="minGapValue">0</b></label>
-          <input id="minGap" type="range" min="0" max="50" value="0" step="1">
-        </div>
-        <div class="field">
-          <label for="sortBy">Ordenar</label>
-          <select id="sortBy">
-            <option value="gap">Mayor oportunidad</option>
-            <option value="demand">Mayor demanda</option>
-            <option value="supply">Menor oferta</option>
-            <option value="name">A–Z</option>
-          </select>
-        </div>
-        <button id="resetFilters" class="reset-btn" type="button">Restablecer</button>
-      </section>
-
-      <section class="summary-band">
-        <div>
-          <span class="eyebrow">LECTURA ACTUAL</span>
-          <strong id="summaryText">—</strong>
-        </div>
-        <div class="legend" aria-label="Leyenda">
-          <span><i class="dot demand"></i>Demanda</span>
-          <span><i class="dot supply"></i>Oferta</span>
-          <span><i class="dot gap"></i>Brecha</span>
-        </div>
-      </section>
-
-      <section class="content-layout">
-        <div class="main-list">
-          <div class="section-heading">
-            <div><h2>Subnichos</h2><p>Haz clic en una tarjeta para ver el ángulo comercial y las ideas de contenido.</p></div>
-            <span id="resultsCount" class="count-pill">0 resultados</span>
-          </div>
-          <div id="nicheGrid" class="niche-grid"></div>
-        </div>
-
-        <aside class="detail-panel" aria-live="polite">
-          <span class="eyebrow">OPORTUNIDAD SELECCIONADA</span>
-          <h2 id="detailName">Selecciona un subnicho</h2>
-          <div class="score-line"><span id="detailLevel" class="level-badge">—</span><strong id="detailGap">—</strong></div>
-
-          <div class="detail-bars">
-            <div class="detail-row"><span>Demanda</span><b id="detailDemand">—</b></div>
-            <div class="meter"><i id="detailDemandBar" class="demand-bar"></i></div>
-            <div class="detail-row"><span>Oferta</span><b id="detailSupply">—</b></div>
-            <div class="meter"><i id="detailSupplyBar" class="supply-bar"></i></div>
-            <div class="detail-row"><span>Brecha</span><b id="detailGapSmall">—</b></div>
-            <div class="meter"><i id="detailGapBar" class="gap-bar"></i></div>
-          </div>
-
-          <div class="detail-copy">
-            <h3>Ángulo comercial</h3><p id="detailAngle">—</p>
-            <h3>Contenido para captar tráfico</h3><p id="detailContent">—</p>
-            <h3>Perfil de compra</h3><p id="detailBuyer">—</p>
-          </div>
-        </aside>
-      </section>
-
-      <footer class="footer-note">
-        <p><strong>Metodología:</strong> Demanda y oferta son índices estratégicos estimados de 0 a 100 para comparar subnichos. No son estadísticas oficiales publicadas por Hotmart.</p>
-        <p>© 2026 ACStartup — Abel Castro Soto — Todos los derechos reservados. Diseñando con pasión.</p>
-      </footer>
+      </aside>
     </section>
-  </main>
-  <script src="script.js"></script>
+
+    <footer class="footer-note">
+      <p><strong>Metodología:</strong> Demanda y Oferta son índices estratégicos estimados de 0 a 100 para comparar subnichos; no son estadísticas oficiales publicadas por Hotmart.</p>
+      <p>© 2026 ACStartup — Abel Castro Soto — Todos los derechos reservados.</p>
+    </footer>
+  </section>
+
+  <audio id="ambientAudio" src="assets/ambient-velas.mp3" loop preload="auto"></audio>
+</main>
+<script src="script.js"></script>
 </body>
 </html>
