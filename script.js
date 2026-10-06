@@ -25,30 +25,96 @@ const niches=[
 ];
 
 const $=id=>document.getElementById(id);
-const cover=$("cover"),dashboard=$("dashboard"),audio=$("ambientAudio"),grid=$("nicheGrid");
+const cover=$("cover"),dashboard=$("dashboard"),grid=$("nicheGrid");
 let selected=null;
-audio.volume=.45;
+let audioCtx=null,masterGain=null,musicTimer=null,musicOn=false,chordIndex=0;
 
 const gap=n=>n.demand-n.supply;
 const avg=(rows,key)=>rows.length?Math.round(rows.reduce((s,n)=>s+n[key],0)/rows.length):0;
 const level=n=>{const g=gap(n);return g>=35?"Muy alta":g>=25?"Alta":g>=15?"Media-alta":g>=7?"Media":"Baja"};
 
 function syncMusicUi(){
-  const on=!audio.paused;
+  const on=musicOn;
   $("coverLed").classList.toggle("on",on);
   $("musicLed").classList.toggle("on",on);
   $("coverMusicBtn").setAttribute("aria-pressed",String(on));
   $("musicBtn").setAttribute("aria-pressed",String(on));
   $("musicLabel").textContent=on?"Música ON":"Música OFF";
-  $("coverStatus").textContent=on?"Música ON · Pulsa HOTMART para entrar":"Música OFF · Pulsa MUSIC para activar o HOTMART para entrar";
+  $("coverStatus").textContent=on?"Música ON · luz verde encendida · Pulsa HOTMART para entrar":"Música OFF · sin luz · Pulsa MUSIC para activar";
+}
+function playAmbientChord(){
+  if(!audioCtx||!masterGain||!musicOn)return;
+  const chords=[
+    [196,246.94,293.66,392],
+    [174.61,220,261.63,349.23],
+    [220,261.63,329.63,440],
+    [196,246.94,329.63,392]
+  ];
+  const notes=chords[chordIndex%chords.length];
+  chordIndex++;
+  const now=audioCtx.currentTime;
+  notes.forEach((freq,i)=>{
+    const osc=audioCtx.createOscillator();
+    const gain=audioCtx.createGain();
+    const filter=audioCtx.createBiquadFilter();
+    osc.type=i%2===0?"sine":"triangle";
+    osc.frequency.setValueAtTime(freq,now);
+    filter.type="lowpass";
+    filter.frequency.setValueAtTime(720,now);
+    gain.gain.setValueAtTime(0.0001,now);
+    gain.gain.exponentialRampToValueAtTime(0.0065/(i+1),now+1.6);
+    gain.gain.exponentialRampToValueAtTime(0.0001,now+9.4);
+    osc.connect(filter).connect(gain).connect(masterGain);
+    osc.start(now);
+    osc.stop(now+9.7);
+  });
 }
 async function startMusic(){
-  try{await audio.play();syncMusicUi();return true}catch(e){syncMusicUi();return false}
+  if(musicOn)return true;
+  try{
+    const Ctx=window.AudioContext||window.webkitAudioContext;
+    if(!Ctx)throw new Error("AudioContext no disponible");
+    if(!audioCtx){
+      audioCtx=new Ctx();
+      masterGain=audioCtx.createGain();
+      masterGain.gain.value=.42;
+      masterGain.connect(audioCtx.destination);
+    }
+    if(audioCtx.state==="suspended")await audioCtx.resume();
+    musicOn=true;
+    playAmbientChord();
+    musicTimer=setInterval(playAmbientChord,8000);
+    syncMusicUi();
+    return true;
+  }catch(err){
+    musicOn=false;
+    $("coverStatus").textContent="Tu navegador bloqueó el audio · vuelve a tocar MUSIC";
+    syncMusicUi();
+    return false;
+  }
 }
-function stopMusic(){audio.pause();syncMusicUi()}
-async function toggleMusic(){audio.paused?await startMusic():stopMusic()}
-async function enterUniverse(){if(audio.paused) await startMusic();cover.hidden=true;dashboard.hidden=false;window.scrollTo({top:0,behavior:"smooth"})}
-function goHome(){dashboard.hidden=true;cover.hidden=false;window.scrollTo({top:0,behavior:"smooth"});syncMusicUi()}
+async function stopMusic(){
+  musicOn=false;
+  if(musicTimer){clearInterval(musicTimer);musicTimer=null}
+  if(audioCtx){
+    try{await audioCtx.close()}catch(e){}
+    audioCtx=null;masterGain=null;
+  }
+  syncMusicUi();
+}
+async function toggleMusic(){musicOn?await stopMusic():await startMusic()}
+async function enterUniverse(){
+  if(!musicOn)await startMusic();
+  cover.hidden=true;
+  dashboard.hidden=false;
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function goHome(){
+  dashboard.hidden=true;
+  cover.hidden=false;
+  window.scrollTo({top:0,behavior:"smooth"});
+  syncMusicUi();
+}
 
 function initCategories(){
   [...new Set(niches.map(n=>n.category))].sort().forEach(c=>{
@@ -96,6 +162,5 @@ $("coverMusicBtn").addEventListener("click",toggleMusic);
 $("musicBtn").addEventListener("click",toggleMusic);
 $("enterBtn").addEventListener("click",enterUniverse);
 $("homeBtn").addEventListener("click",goHome);
-audio.addEventListener("play",syncMusicUi);audio.addEventListener("pause",syncMusicUi);audio.addEventListener("error",()=>{$("coverStatus").textContent="No se pudo cargar la música. Recarga la página."});
 
 initCategories();syncRangeLabels();render();syncMusicUi();
