@@ -25,7 +25,7 @@ const niches=[
 ];
 
 const $=id=>document.getElementById(id);
-const cover=$("cover"),dashboard=$("dashboard"),grid=$("nicheGrid");
+const dashboard=$("dashboard"),grid=$("nicheGrid");
 let selected=null;
 let audioCtx=null,masterGain=null,musicTimer=null,musicOn=false,chordIndex=0;
 
@@ -35,12 +35,9 @@ const level=n=>{const g=gap(n);return g>=35?"Muy alta":g>=25?"Alta":g>=15?"Media
 
 function syncMusicUi(){
   const on=musicOn;
-  $("coverLed").classList.toggle("on",on);
   $("musicLed").classList.toggle("on",on);
-  $("coverMusicBtn").setAttribute("aria-pressed",String(on));
   $("musicBtn").setAttribute("aria-pressed",String(on));
   $("musicLabel").textContent=on?"Música ON":"Música OFF";
-  $("coverStatus").textContent=on?"Música ON · luz verde encendida · Pulsa HOTMART para entrar":"Música OFF · sin luz · Pulsa MUSIC para activar";
 }
 function playAmbientChord(){
   if(!audioCtx||!masterGain||!musicOn)return;
@@ -88,7 +85,6 @@ async function startMusic(){
     return true;
   }catch(err){
     musicOn=false;
-    $("coverStatus").textContent="Tu navegador bloqueó el audio · vuelve a tocar MUSIC";
     syncMusicUi();
     return false;
   }
@@ -103,19 +99,6 @@ async function stopMusic(){
   syncMusicUi();
 }
 async function toggleMusic(){musicOn?await stopMusic():await startMusic()}
-async function enterUniverse(){
-  if(!musicOn)await startMusic();
-  cover.hidden=true;
-  dashboard.hidden=false;
-  window.scrollTo({top:0,behavior:"smooth"});
-}
-function goHome(){
-  dashboard.hidden=true;
-  cover.hidden=false;
-  window.scrollTo({top:0,behavior:"smooth"});
-  syncMusicUi();
-}
-
 function initCategories(){
   [...new Set(niches.map(n=>n.category))].sort().forEach(c=>{
     const o=document.createElement("option");o.value=c;o.textContent=c;$("categoryFilter").appendChild(o)
@@ -158,9 +141,6 @@ function resetFilters(){$("searchInput").value="";$("categoryFilter").value="all
   const el=$(id);el.addEventListener(id==="searchInput"||["minDemand","maxSupply","minGap"].includes(id)?"input":"change",()=>{syncRangeLabels();render()})
 });
 $("resetFilters").addEventListener("click",resetFilters);
-$("coverMusicBtn").addEventListener("click",toggleMusic);
 $("musicBtn").addEventListener("click",toggleMusic);
-$("enterBtn").addEventListener("click",enterUniverse);
-$("homeBtn").addEventListener("click",goHome);
 
 initCategories();syncRangeLabels();render();syncMusicUi();
